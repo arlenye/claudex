@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 import asyncio
 import datetime
 import logging
@@ -45,8 +46,9 @@ class CoreApp:
 
         loop = asyncio.get_running_loop()
         shutdown = asyncio.Event()
-        loop.add_signal_handler(signal.SIGINT, shutdown.set)
-        loop.add_signal_handler(signal.SIGTERM, shutdown.set)
+        if sys.platform != "win32":
+            loop.add_signal_handler(signal.SIGINT, shutdown.set)
+            loop.add_signal_handler(signal.SIGTERM, shutdown.set)
 
         await shutdown.wait()
 
