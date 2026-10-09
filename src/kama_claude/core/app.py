@@ -46,9 +46,18 @@ class CoreApp:
 
         loop = asyncio.get_running_loop()
         shutdown = asyncio.Event()
-        if sys.platform != "win32":
+        try:
+            # Unix / macOS：asyncio 原生支持信号处理器
             loop.add_signal_handler(signal.SIGINT, shutdown.set)
             loop.add_signal_handler(signal.SIGTERM, shutdown.set)
+        except NotImplementedError:
+            # Windows：add_signal_handler 未实现，改用标准 signal.signal，
+            # 并在事件循环线程里触发 shutdown（call_soon_threadsafe 保证线程安全）
+            def _request_shutdown(signum: int, _frame: object) -> None:
+                loop.call_soon_threadsafe(shutdown.set)
+
+            signal.signal(signal.SIGINT, _request_shutdown)
+            signal.signal(signal.SIGTERM, _request_shutdown)
 
         await shutdown.wait()
 
