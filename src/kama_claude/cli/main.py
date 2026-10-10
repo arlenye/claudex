@@ -17,6 +17,7 @@ def main() -> None:
     subparsers.add_parser("ping", help="Ping the core daemon")
 
     args = parser.parse_args()
+    print(f"args ={args} ")
 
     if args.version:
         cmd_version()
